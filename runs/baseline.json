@@ -1,31 +1,31 @@
 {
-    "seed" : 42,
-    "amp" : true,
-    
-    "frontal_img_size" : 256,
-    
-    "batch_size" : 32,
-    "patient_image_limit" : 4,
+	"seed" : 42,
+	"amp" : true,
+	
+	"frontal_img_size" : 256,
+	
+	"batch_size" : 32,
+	"patient_image_limit" : 4,
 	"augment_level" : 1,
-    "augment_pairs" : false,
-    "augment_singleton" : false,
-    
-    "optimizer" : "adam",
-    "weight_decay" : 0.0001,
-    "start_lr" : 0.001,
+	"augment_pairs" : false,
+	"augment_singleton" : false,
+	
+	"optimizer" : "adam",
+	"weight_decay" : 0.0001,
+	"start_lr" : 0.001,
 	"warmup_iterations" : 2000,
 	
 	"loss" : "distance_classifier_bce",
 	"patient_balancing" : 0,
 	"hardneg_mining" : false,
-    
-    "scheduler" : "MinLengthPatienceDecay",
-    "patience" : 10,
-    "decay_factor" : 10,
+	
+	"scheduler" : "MinLengthPatienceDecay",
+	"patience" : 10,
+	"decay_factor" : 10,
 	"decay_lengths" : [2000,200,100],
-    
-    "model" : "densenet121",
-    "pretrained" : true,
+	
+	"model" : "densenet121",
+	"pretrained" : true,
 	"feature_dim" : 1024,
 	"feature_activation" : "none"
 }
