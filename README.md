@@ -46,6 +46,7 @@ For now there will be no explanations for each setting, so inspect the code for 
 
 1st parameter is the path to the configuration file in the previous step.
 2nd parameter is the device to use. To use GPU, use 0. To use a specific GPU on a device with multiple GPUs, use the desired index. Multiple GPU usage is not supported.
+Using baseline settings requires 16GB of GPU memory.
 
 #### Testing
 
