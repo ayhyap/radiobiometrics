@@ -59,6 +59,19 @@ The parameters are the same as the ones used for training in *main.py*.
 The script will output pickle files to the same directory of the saved model.
 This script expects a trained model which follows the configuration provided.
 
+
+(2023/09/05) UPDATE:
+You can now run test_folder.py to test a trained model on a folder of images (jpg, png, etc.; dicom not supported), specifically the 'test_images'.
+Like above, run `test_folder.py [configuration json] [cpu/0/1/2/...]`
+
+Under 'test_images', create subfolders for each subject and place their images in.
+Subjects with only 1 image can be placed directly into the 'test_images' folder as loose images.
+
+50 images from Radiopaedia are provided in this repository.
+Images are used courtesy of the respective parties under the CC license.
+Access the original images at https://radiopaedia.org/cases/[case number]
+The case number is the file name for loose images, and the folder name for others.
+
 ## Others
 Our experiments on MIMIC-CXR used a filtered and preprocessed subset of data which we will not disclose in public for confidentiality reasons.
 Contact us directly for more details.
