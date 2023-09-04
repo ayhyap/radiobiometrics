@@ -4,7 +4,7 @@
     "split_df" : "path/to/mimic-cxr-2.0.0-split.csv",
 	
     "baseline_json" : "runs/baseline.json",
-    "dataloader_workers" : 2,
+    "dataloader_workers" : 0,
     
     "iterations_per_validation" : 1000,
    

@@ -6,7 +6,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 from PIL import Image, ImageOps
 from torchvision import transforms
-
+from collections import defaultdict
 # creates batches of PATIENTS of images
 # all studies are unrolled to yield a sequence of images
 def patient_collate_flatten(inputs):
@@ -191,6 +191,178 @@ class ContrastivePatientDS(Dataset):
 			assert img is not None
 			images.append(self.preprocess(img))
 			files.append(file)
+			if self.return_orig_img:
+				orig_images.append(self.basic_preprocess(img))
+		
+		
+		outputs = {}
+		
+		outputs['orig_images'] = orig_images
+		outputs['images'] = images
+		outputs['files'] = files
+		outputs['augment_pairs'] = self.augment_pairs
+		outputs['idx'] = [dataset_index for _ in files]
+		return outputs
+
+
+
+def verify_img(path):
+	try:
+		img = Image.open(path)
+		img.verify()
+		img.close()
+		img = Image.open(path)
+		img.transpose(Image.FLIP_LEFT_RIGHT)
+		img.close()
+		return True
+	except:
+		return False
+
+
+'''
+For use in test_folder.py
+
+Loose images
+/test_images/img.jpg
+Organized images
+/test_images/subject1/img1.jpg
+/test_images/subject1/img2.jpg
+
+
+loose images are assumed to belong to individual subjects
+images in folders are assumed to belong to the same subject
+'''
+class PatientFolderDS(Dataset):
+	def __init__(	self,
+					img_dir,
+					img_size,
+					augment,
+					augment_pairs,
+					augment_singleton=False,
+					img_limit=10,
+					return_orig_img=False
+				):
+		self.img_dir = img_dir
+		
+		dir_contents = os.listdir(img_dir)
+		subdirectories = [thing for thing in dir_contents if os.path.isdir('{}/{}'.format(img_dir,thing))]
+		loose_imgs = [thing for thing in dir_contents if not os.path.isdir('{}/{}'.format(img_dir,thing))]
+		
+		current_id = 0
+		self.patient2paths = defaultdict(list)
+		# check if the loose images are real images
+		for file in loose_imgs:
+			path = '{}/{}'.format(img_dir, file)
+			if verify_img(path):
+				self.patient2paths[current_id].append(path)
+				current_id += 1
+		
+		# check if images in subsubdirectories are real images
+		for subdir in subdirectories:
+			is_valid = False
+			for dir, _, files in os.walk('{}/{}'.format(img_dir, subdir)):
+				for file in files:
+					path = '{}/{}'.format(dir, file)
+					if verify_img(path):
+						is_valid = True
+						self.patient2paths[current_id].append(path)
+			if is_valid:
+				current_id += 1
+		
+		print(sum([len(thing) for thing in self.patient2paths.values()]),'images found')
+		assert len(self.patient2paths) > 1, "There should be at least 2 subjects in the test folder"
+		
+		self.image_limit = img_limit
+		self.augment_pairs = augment_pairs
+		self.augment_singleton = augment_singleton
+		self.return_orig_img = return_orig_img
+		
+		
+		## construct preprocessor
+		# note: dataloading can be sped up by preprocessing images with bounding box crop, histogram equalization, and resizing
+		# if preprocessed, comment the bboxcrop() and histeq() lines (also the ones for self.basic_preprocess!)
+		preprocess = []
+		preprocess.append(BBoxCrop())
+		preprocess.append(HistEQ())
+		preprocess.append(SquarePad())
+		preprocess.append(transforms.Resize((img_size,img_size)))
+		
+		if augment == 2:
+			# heavier augmentation
+			preprocess.append(transforms.ColorJitter(brightness=0.2, contrast=0.2))
+			preprocess.append(transforms.RandomAffine(	20, 
+														translate=(0.4,0.4), 
+														scale=(0.8,1.2), 
+														shear=10, 
+														interpolation=torchvision.transforms.InterpolationMode.BILINEAR, 
+														fill=0))
+		elif augment == 1:
+			# milder augmentation
+			preprocess.append(transforms.ColorJitter(brightness=0.1, contrast=0.1))
+			preprocess.append(transforms.RandomAffine(	10, 
+														translate=(0.2,0.2), 
+														scale=(0.9,1.1), 
+														shear=5, 
+														interpolation=torchvision.transforms.InterpolationMode.BILINEAR, 
+														fill=0))
+		elif augment == 0:
+			pass
+		else:
+			raise ValueError(augment)
+		
+		preprocess += [transforms.ToTensor(),
+					   transforms.Normalize( (0.502,) , (0.289,) )]
+		
+		self.preprocess = transforms.Compose(preprocess)
+		self.basic_preprocess = transforms.Compose([
+									BBoxCrop(),
+									HistEQ(),
+									SquarePad(), 
+									transforms.Resize((img_size,img_size)), 
+									transforms.ToTensor()])
+	
+	def __len__(self):
+		return len(self.patient2paths)
+	
+	def __getitem__(self,dataset_index):
+		'''
+		EXPECTED OUTPUTS
+		images			var(images) x c x h x w
+		files			total_images
+		augment_pairs	1
+		'''
+		# get relevant rows
+		patient_paths = self.patient2paths[dataset_index]
+		
+		# if too many images, randomly sample N images
+		if len(patient_paths) > self.image_limit:
+			patient_paths = np.random.choice(patient_paths, size=self.image_limit, replace=False)
+		
+		orig_images = [] if self.return_orig_img else None
+		images = []
+		files = []
+		
+		for path in patient_paths:
+			try:
+				img = Image.open(path).convert('RGB')
+			except FileNotFoundError:
+				continue
+			
+			images.append(self.preprocess(img))
+			files.append(path)
+			if self.return_orig_img:
+				orig_images.append(self.basic_preprocess(img))
+			
+			if self.augment_pairs:
+				images.append(self.preprocess(img))
+				files.append(path)
+				if self.return_orig_img:
+					orig_images.append(self.basic_preprocess(img))
+		
+		if len(images) == 1 and self.augment_singleton:
+			assert img is not None
+			images.append(self.preprocess(img))
+			files.append(path)
 			if self.return_orig_img:
 				orig_images.append(self.basic_preprocess(img))
 		

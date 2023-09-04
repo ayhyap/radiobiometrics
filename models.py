@@ -42,6 +42,7 @@ class ContrastiveWrapper(nn.Module):
 		self.cnn = timm.create_model(config['model'], pretrained = config['pretrained'], num_classes=self.feat_dim)
 		
 		self.config = config
+		
 		if config['feature_activation'] == 'sigmoid':
 			self.head = nn.Sigmoid()
 		elif config['feature_activation'] == 'tanh':
@@ -71,6 +72,9 @@ class ContrastiveWrapper(nn.Module):
 			self.extras = nn.ModuleDict({'classifier' : nn.Linear(self.feat_dim, config['num_training_patients'])})
 		elif config['loss'] in ['cos_softmax']:
 			self.extras = nn.ModuleDict({'classifier' : CosineClassifier(self.feat_dim, config['num_training_patients'])})
+		elif config['loss'] in ['legacy_distance_classifier_bce']:
+			# self.extras = nn.ModuleDict({'classifier' : SameSignLinear(1, 1, sign=1)})
+			self.extras = None
 		else:
 			self.extras = None
 	

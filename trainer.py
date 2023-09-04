@@ -403,6 +403,7 @@ class Trainer():
 				outputs['patient-contrast_{}'.format(k)] = v
 			AUCs.append(patient_metrics['image_AUC'])
 			print('\t_________________________', end='\r')
+			print('P_AUC:', np.round(patient_metrics['image_AUC'], 4), end='\t')
 			print('P_AUC_logodds:',
 				np.round(
 					np.log(
@@ -823,6 +824,7 @@ loss_mapping = {
 	'cos_triplet_thermostat':			all_triplet_loss,
 	'distance_classifier_bce':			all_pairs_BCE_loss,
 	'distance_classifier_ce':			all_pairs_CE_loss,
+	'legacy_distance_classifier_bce':	all_pairs_BCE_loss,
 	'softmax':							softmax_loss,
 	'cos_softmax':						softmax_loss
 }
@@ -841,6 +843,7 @@ loss_inner_mapping = {
 	'cos_triplet_thermostat':			triplet_loss_inner_cosine,
 	'distance_classifier_bce':			CE_loss_inner_distance_classifier,
 	'distance_classifier_ce':			CE_loss_inner_distance_classifier,
+	'legacy_distance_classifier_bce':	CE_loss_inner_distance_classifier,
 	'softmax':							None,
 	'cos_softmax':						None
 }
