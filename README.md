@@ -8,7 +8,7 @@ For confidentiality reasons, minimal details will be provided until later notice
 ### Installation
 - Clone/download the repository, then cd into it.
 - Use anaconda to set up an environment.
-- Use environment.yml for CPU only devices, otherwise environment.yml
+- Use environment_CPU.yml for CPU only devices, otherwise environment.yml
 `conda env create -f environment.yml`
 
 ### Running
