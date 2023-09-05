@@ -422,7 +422,6 @@ class Trainer():
 	def rank_for_figures(self, loader):
 		patient_features = []
 		id2patient = []
-		id2laterality = []
 		files = []
 		
 		self.model.eval()
@@ -433,7 +432,6 @@ class Trainer():
 				features = self.model(batch['images'])
 				patient_features.append(features.cpu().detach())
 				id2patient.append(batch['id2patient'])
-				id2laterality.append(batch['id2laterality'])
 				files.append(batch['files'])
 			self.model.to('cpu', non_blocking=True)
 			
@@ -450,7 +448,6 @@ class Trainer():
 				id2patient[i] += current_offset
 				current_offset += temp
 			id2patient = torch.cat(id2patient)
-			id2laterality = torch.cat(id2laterality)
 			
 			triplets = build_eval_triplets(id2patient)
 			print('done')
@@ -475,7 +472,9 @@ class Trainer():
 		
 		fpr, tpr, thres = roc_curve(_img_labels.flatten(), _img_scores.flatten())
 		
-		return img_scores, img_labels, files, id2laterality, (fpr,tpr,thres)
+		print('AUC:', auc(fpr,tpr))
+		
+		return img_scores, img_labels, files, (fpr,tpr,thres)
 	
 	def build_training_triplets(self,id2patient):	# 0 to N-1 inclusive
 		if id2patient[0] is None:

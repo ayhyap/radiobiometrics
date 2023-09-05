@@ -92,6 +92,6 @@ if __name__ == '__main__':
 	
 	# run test set
 	print('Testing...')
-	test_dict = trainer.test(test_loader, test=True)
-	with open('{}/test-results.pkl'.format(config['_savedir']),'wb') as fp:
-		pickle.dump(test_dict, fp)
+	img_scores, img_labels, files, (fpr,tpr,thres) = trainer.rank_for_figures(test_loader)
+	files = [file.replace(IMAGE_DIR,'') for file in files]
+	pd.DataFrame(img_scores, index=files, columns=files).to_csv('{}-test_folder_predictions.csv'.format(CONFIG_FILE[:-5]))
