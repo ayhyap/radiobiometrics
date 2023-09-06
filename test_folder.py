@@ -94,4 +94,13 @@ if __name__ == '__main__':
 	print('Testing...')
 	img_scores, img_labels, files, (fpr,tpr,thres) = trainer.rank_for_figures(test_loader)
 	files = [file.replace(IMAGE_DIR,'') for file in files]
-	pd.DataFrame(img_scores, index=files, columns=files).to_csv('{}-test_folder_predictions.csv'.format(CONFIG_FILE[:-5]))
+	pd.DataFrame(img_scores, index=files, columns=files).to_csv('{}-test_folder_prediction_matrix.csv'.format(CONFIG_FILE[:-5]))
+	
+	pred_table = {}
+	pred_table['file1'] = np.concatenate([files] * len(files))
+	pred_table['file2'] = np.repeat(files, len(files))
+	pred_table['score'] = img_scores.flatten()
+	pred_table['label'] = img_labels.flatten()
+	pred_table = pd.DataFrame(pred_table)
+	pred_table = pred_table[pred_table.file1 != pred_table.file2]
+	pred_table.to_csv('{}-test_folder_prediction_table.csv'.format(CONFIG_FILE[:-5]), index=False)
